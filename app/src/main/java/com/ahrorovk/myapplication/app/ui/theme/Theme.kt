@@ -1,4 +1,4 @@
-package com.ahrorovk.myapplication.ui.theme
+package com.ahrorovk.myapplication.app.ui.theme
 
 import android.app.Activity
 import android.os.Build

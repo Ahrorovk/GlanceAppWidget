@@ -2,4 +2,7 @@
 <resources>
     <string name="app_name">GlanceAppWidget</string>
     <string name="widget_description">A simple Glance widget example</string>
+    <string name="wait_a_moment">Wait a moment</string>
+    <string name="upcoming_prayer">Upcoming prayer</string>
+    <string name="at">at</string>
 </resources>

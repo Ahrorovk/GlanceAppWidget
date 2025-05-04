@@ -1,4 +1,4 @@
-package com.ahrorovk.myapplication.ui.theme
+package com.ahrorovk.myapplication.app.ui.theme
 
 import androidx.glance.material3.ColorProviders
 
