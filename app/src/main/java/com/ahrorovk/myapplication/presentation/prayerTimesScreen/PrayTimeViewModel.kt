@@ -2,11 +2,13 @@ package com.ahrorovk.myapplication.presentation.prayerTimesScreen
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ahrorovk.myapplication.core.Cities
@@ -22,6 +24,7 @@ import com.ahrorovk.myapplication.domain.state.GetPrayerTimesState
 import com.ahrorovk.myapplication.domain.use_case.GetPrayerTimesFromDbUseCase
 import com.ahrorovk.myapplication.domain.use_case.GetPrayerTimesUseCase
 import com.ahrorovk.myapplication.domain.use_case.InsertPrayTimeUseCase
+import com.ahrorovk.myapplication.widget.presentation.prayerTimeWidget.PrayerTimeWidget
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +49,8 @@ class PrayTimeViewModel @Inject constructor(
     private val getPrayerTimesFromDbUseCase: GetPrayerTimesFromDbUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    val prefs = context.getSharedPreferences("city_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("city_prefs", Context.MODE_PRIVATE)
     private val _state = MutableStateFlow(PrayerTimesState())
     val state = _state.stateIn(
         viewModelScope + Dispatchers.IO,
@@ -58,11 +62,16 @@ class PrayTimeViewModel @Inject constructor(
     init {
         val isOnline = isNetworkAvailable()
         onEvent(PrayerTimesEvent.OnIsOnlineStateChange(isOnline))
-        _state.update {
-            it.copy(
-                locationState = Cities.valueOf(prefs.getString("city",Cities.Khujand.name)?:Cities.Khujand.name)
-            )
-        }
+        dataStoreManager.getLocationState.onEach { value ->
+            prefs.edit().putString("city", value).apply()
+            PrayerTimeWidget().updateAll(context)
+            _state.update {
+                it.copy(
+                    locationState = Cities.valueOf(value)
+                )
+            }
+        }.launchIn(viewModelScope)
+
         dataStoreManager.getDateState.onEach { value ->
             _state.update {
                 it.copy(
@@ -131,8 +140,12 @@ class PrayTimeViewModel @Inject constructor(
             }
 
             is PrayerTimesEvent.OnLocationChange -> {
-                prefs.edit().putString("city", event.location.name).apply()
-                getPrayerTimesFromNetwork()
+                viewModelScope.launch {
+                    dataStoreManager.updateLocationState(event.location.name)
+                    prefs.edit().putString("city", event.location.name).apply()
+                    PrayerTimeWidget().updateAll(context)
+                    getPrayerTimesFromNetwork()
+                }
             }
 
             is PrayerTimesEvent.OnExpandedChange -> {
@@ -162,8 +175,6 @@ class PrayTimeViewModel @Inject constructor(
                     it.copy(isOnline = event.isOnline)
                 }
             }
-
-            else -> {}
         }
     }
 

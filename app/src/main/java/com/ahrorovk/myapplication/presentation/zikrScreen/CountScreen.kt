@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.Tracing.enabled
+import androidx.glance.appwidget.updateAll
 import com.ahrorovk.myapplication.app.MainActivity
 import com.ahrorovk.myapplication.widget.GlanceWidget
 import kotlinx.coroutines.launch

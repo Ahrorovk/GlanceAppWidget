@@ -1,12 +1,12 @@
 package com.ahrorovk.myapplication.widget.presentation.prayerTimeWidget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,14 +35,20 @@ import com.ahrorovk.myapplication.core.Cities
 import com.ahrorovk.myapplication.core.getListOfTimes
 import com.ahrorovk.myapplication.core.toMMDDYYYY
 import com.ahrorovk.myapplication.core.toTimeHoursAndMinutes
+import com.ahrorovk.myapplication.data.local.dataStore.DataStoreManager
 import com.ahrorovk.myapplication.data.model.Time
 import com.ahrorovk.myapplication.data.model.dto.PrayerTimesEntity
 import com.ahrorovk.myapplication.widget.WidgetEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 
 
 class PrayerTimeWidget : GlanceAppWidget() {
 
+    private lateinit var dataStoreManager: DataStoreManager
+
+    @SuppressLint("CoroutineCreationDuringComposition")
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun provideGlance(
         context: Context,
@@ -50,14 +56,11 @@ class PrayerTimeWidget : GlanceAppWidget() {
     ) {
         val prefs = context.getSharedPreferences("city_prefs", Context.MODE_PRIVATE)
         val city = prefs.getString("city", Cities.Khujand.name)
-
         provideContent {
             val currentDate = System.currentTimeMillis()
-            val repo = remember {
-                EntryPointAccessors
+            val repo = EntryPointAccessors
                     .fromApplication(context, WidgetEntryPoint::class.java)
                     .repo()
-            }
             val times by produceState(initialValue = emptyList<PrayerTimesEntity>()) {
                 repo.getPrayTimesFromDbByDate(
                     currentDate.toMMDDYYYY()
@@ -66,12 +69,13 @@ class PrayerTimeWidget : GlanceAppWidget() {
             GlanceTheme(colors = MyAppWidgetGlanceColorScheme.colors) {
                 times.forEach { time ->
                     if (time.date == currentDate.toMMDDYYYY())
-                        PrayerTime(getListOfTimes(time), city ?: Cities.Khujand.name)
+                        PrayerTime(getListOfTimes(time), city?:Cities.Khujand.name)
                 }
             }
         }
     }
 
+    @SuppressLint("InvalidColorHexValue")
     @Composable
     fun PrayerTime(
         times: List<Time>,

@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="1dp"
     android:minHeight="1dp"
-    android:updatePeriodMillis="1800000"
+    android:updatePeriodMillis="6000"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:targetCellWidth="2"
     android:targetCellHeight="1"
